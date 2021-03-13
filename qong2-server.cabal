@@ -1,0 +1,83 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 287e614e7d571a0a3b66b8a4bd285cecae3e029f4f4dab088f1e75d625b9b7b6
+
+name:           qong2-server
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/githubuser/qong2-server#readme>
+homepage:       https://github.com/githubuser/qong2-server#readme
+bug-reports:    https://github.com/githubuser/qong2-server/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2021 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/qong2-server
+
+library
+  exposed-modules:
+      Import
+      InitialState
+      Run
+      Types
+      Util
+      WebSockets
+  other-modules:
+      Paths_qong2_server
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      aeson
+    , base >=4.11 && <10
+    , optparse-applicative
+    , rio >=0.1.12.0
+    , websockets >=0.12.7.2
+  default-language: Haskell2010
+
+executable qong2-server-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_qong2_server
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.11 && <10
+    , optparse-applicative
+    , optparse-simple
+    , qong2-server
+    , rio >=0.1.12.0
+    , websockets
+  default-language: Haskell2010
+
+test-suite qong2-server-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      UtilSpec
+      Paths_qong2_server
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.11 && <10
+    , hspec
+    , optparse-applicative
+    , qong2-server
+    , rio >=0.1.12.0
+    , websockets >=0.12.7.2
+  default-language: Haskell2010
