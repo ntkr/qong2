@@ -1,11 +1,21 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE BangPatterns #-}
 -- | Silly utility module, used to demonstrate how to write a test
 -- case.
 module Util
-  ( plus2
+  ( mapWithIndex
+  , pair
   ) where
 
 import RIO
 
-plus2 :: Int -> Int
-plus2 = (+ 2)
+mapWithIndex :: (Int -> a -> b) -> [a] -> [b]
+mapWithIndex f xs = 
+  mapWithIndexRec f 0 xs
+  where
+    mapWithIndexRec f i [] = []
+    mapWithIndexRec f i (x:xs) = 
+      f i x : mapWithIndexRec f (i + 1) xs
+
+pair :: a -> (a, a)
+pair !x = (x, x)

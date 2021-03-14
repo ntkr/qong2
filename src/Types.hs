@@ -37,7 +37,8 @@ data State = State
 
 -- is it possible to create a type here
 -- whose values can only be set once?
-type GameState = [[Int]]
+data Mark = None | X | O deriving (Generic, ToJSON, FromJSON)
+type GameState = [[Mark]]
 
 data Player = Player
   { playerName :: !String
@@ -45,14 +46,14 @@ data Player = Player
   }
 
 
-data IncomingMessage 
+data Message 
   = JoinGame { joinGameName::String }
   | LeaveGame
   | StartGame
   | Move { moveX::Int, moveY::Int }-- coordinates
   deriving (Generic, Show)
 
-instance FromJSON IncomingMessage where
+instance FromJSON Message where
   parseJSON = withObject "message" $ \o -> do
     kind <- o .: "type"
     case kind of
@@ -62,7 +63,7 @@ instance FromJSON IncomingMessage where
       "Move" -> Move <$> o .: "x" <*> o .: "y"
       _ -> fail ("unknown message type: " ++ kind)
 
-instance ToJSON IncomingMessage where
+instance ToJSON Message where
   toJSON (JoinGame name) = object [ 
     "type" .= ("JoinGame" :: Text),
     "name" .= name ]

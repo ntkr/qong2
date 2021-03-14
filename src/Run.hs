@@ -5,6 +5,8 @@ module Run (run) where
 import Import
 import RIO
 import WebSockets 
+import Game
+import Util
 import qualified RIO.Text as T
 import Data.Aeson as Aeson
 import qualified Network.WebSockets as WS
@@ -15,17 +17,12 @@ run = do
 
   let host = optionsHost $ appOptions env
   let port = optionsPort $ appOptions env
+  let hostport = fromString host <> ":" <> fromString (show port)
+
+  logInfo $ "Running server on " <> hostport
 
   mServerState <- newMVar initialServerState
-  logInfo "Running server"
-
-  -- liftIO $ WS.runServer host port (application mServerState)
-  -- this needs to be a WS.PendingConnection -> IO () 
-  -- not sure how to use RIO monad here
-  --                              v
   runServer host port $ application mServerState
-  -- withRunInIO $ \runInIO ->
-  --   WS.runServer (runInIO . (application mServerState))
 
 
 application 
@@ -33,50 +30,36 @@ application
   -> WS.PendingConnection
   -> RIO App ()
 application state pending = do
-  -- env <- ask
-  conn <- liftIO $ WS.acceptRequest pending
-  logInfo "Connection Received"
-  liftIO $ WS.withPingThread conn 30 (return ()) $ forever $ do
-    msg <- WS.receiveData conn
-    case Aeson.decode msg :: Maybe IncomingMessage of
 
-        -- Just msg -> updateState state conn msg >>= broadcastState
-        Just msg -> 
-          updateState state conn msg >>= liftIO . broadcastState
-          -- WS.sendTextData conn ((playerName . head . statePlayers) :: Text)
+  conn <- acceptRequest pending
+  logInfo "Connection received, dispatching token."
 
+  withPingThread conn 30 (return ()) 
+    $ forever $ do
 
-        Nothing -> liftIO $ WS.sendTextData conn ("Invalid message" :: Text)
+      msg <- receiveData conn
+
+      case Aeson.decode msg :: Maybe Message of
+
+          Just msg -> updateState state conn msg >>= broadcastState
+
+          Nothing -> sendTextData conn ("Unknown message" :: Text)
     -- WS.sendTextData conn (T.append "Testing" msg :: Text)
     -- add a disconnection function in here
     -- that removes the client after
     -- the session has closed
 
 updateState 
-  :: MVar State 
-  -> WS.Connection 
-  -> IncomingMessage 
-  -> IO State
+  :: MVar State -> WS.Connection -> Message -> RIO App State
 updateState state conn msg =
-  modifyMVar state $ \s -> return (processMessage s conn msg, s)
-
-processMessage 
-  :: State
-  -> WS.Connection
-  -> IncomingMessage
-  -> State
-processMessage state conn (JoinGame name) =
-  state { 
-    statePlayers = Player name conn : statePlayers state
-  }
-processMessage state conn (Move x y) = state
+  modifyMVar state $ \s -> return . pair $ processMessage s conn msg
 
 
-broadcastState :: State -> IO ()
+broadcastState :: State -> RIO App ()
 broadcastState state = 
   let 
     jsonGameState = Aeson.encode . stateGameState $ state
   in 
     forM_ (statePlayers state) $ \p -> do
-      WS.sendTextData (playerConn p) jsonGameState
+      sendTextData (playerConn p) jsonGameState
   

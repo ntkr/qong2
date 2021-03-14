@@ -7,4 +7,7 @@ import RIO
 initialServerState :: State
 initialServerState = State 
     { statePlayers = []
-    , stateGameState = [[]] }
+    , stateGameState = 
+        [ [None, None, None]
+        , [None, None, None]
+        , [None, None, None] ] }

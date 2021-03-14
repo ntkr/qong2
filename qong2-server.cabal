@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 287e614e7d571a0a3b66b8a4bd285cecae3e029f4f4dab088f1e75d625b9b7b6
+-- hash: e69674e8d9c2401ba5ba8fe0be5785f627fee501317b30fa9adb681b86f4df78
 
 name:           qong2-server
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      Game
       Import
       InitialState
       Run
