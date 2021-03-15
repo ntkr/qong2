@@ -17,8 +17,8 @@ run = do
 
   let host = optionsHost $ appOptions env
   let port = optionsPort $ appOptions env
-  let hostport = fromString host <> ":" <> fromString (show port)
 
+  let hostport = fromString host <> ":" <> display port
   logInfo $ "Running server on " <> hostport
 
   mServerState <- newMVar initialServerState
@@ -29,10 +29,12 @@ application
   :: MVar State 
   -> WS.PendingConnection
   -> RIO App ()
-application state pending = do
+application mstate pending = do
 
   conn <- acceptRequest pending
-  logInfo "Connection received, dispatching token."
+  -- Add player to state here
+  player <- joinPlayer mstate conn
+  
 
   withPingThread conn 30 (return ()) 
     $ forever $ do
@@ -41,7 +43,7 @@ application state pending = do
 
       case Aeson.decode msg :: Maybe Message of
 
-          Just msg -> updateState state conn msg >>= broadcastState
+          Just msg -> updateState mstate conn msg >>= broadcastState
 
           Nothing -> sendTextData conn ("Unknown message" :: Text)
     -- WS.sendTextData conn (T.append "Testing" msg :: Text)
@@ -51,8 +53,28 @@ application state pending = do
 
 updateState 
   :: MVar State -> WS.Connection -> Message -> RIO App State
-updateState state conn msg =
-  modifyMVar state $ \s -> return . pair $ processMessage s conn msg
+updateState mstate conn msg =
+  modifyMVar mstate $ \s -> return . pair $ processMessage s conn msg
+
+
+joinPlayer
+  :: MVar State
+  -> WS.Connection
+  -> RIO App Player
+joinPlayer mstate conn =
+  modifyMVar mstate $ \s -> 
+    let 
+      playerNum = ((+ 1) . length . statePlayers) s
+      player = Player playerNum conn
+    in
+      do
+        logInfo $ "Player " <> display playerNum <> " has joined."
+        return 
+          ( s { statePlayers = player : statePlayers s }
+          , player )
+
+
+
 
 
 broadcastState :: State -> RIO App ()

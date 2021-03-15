@@ -33,7 +33,7 @@ instance HasProcessContext App where
 data State = State
   { statePlayers :: ![Player]
   , stateGameState :: !GameState
-  }
+  } deriving (Generic, ToJSON)
 
 -- is it possible to create a type here
 -- whose values can only be set once?
@@ -41,15 +41,17 @@ data Mark = None | X | O deriving (Generic, ToJSON, FromJSON)
 type GameState = [[Mark]]
 
 data Player = Player
-  { playerName :: !String
+  { playerNumber :: !Int
   , playerConn :: !WS.Connection
   }
 
+instance ToJSON Player where
+  toJSON (Player playerNumber _) = object [
+    "number" .= playerNumber ]
+
 
 data Message 
-  = JoinGame { joinGameName::String }
-  | LeaveGame
-  | StartGame
+  = StartGame
   | Move { moveX::Int, moveY::Int }-- coordinates
   deriving (Generic, Show)
 
@@ -57,17 +59,11 @@ instance FromJSON Message where
   parseJSON = withObject "message" $ \o -> do
     kind <- o .: "type"
     case kind of
-      "JoinGame" -> JoinGame <$> o .: "name"
-      "LeaveGame" -> return LeaveGame
       "StartGame" -> return StartGame
       "Move" -> Move <$> o .: "x" <*> o .: "y"
       _ -> fail ("unknown message type: " ++ kind)
 
 instance ToJSON Message where
-  toJSON (JoinGame name) = object [ 
-    "type" .= ("JoinGame" :: Text),
-    "name" .= name ]
-  toJSON LeaveGame = object [ "type" .= ("LeaveGame"  :: Text) ]
   toJSON StartGame = object [ "type" .= ("StartGame" :: Text) ]
   toJSON (Move x y) = object [ 
     "type" .= ("Move" :: Text),

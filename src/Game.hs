@@ -12,17 +12,12 @@ processMessage
 processMessage state conn msg =
   case msg of
 
-    JoinGame name ->
-      state { 
-        statePlayers = Player name conn : statePlayers state
-      }
-
     Move x y ->
       state {
         stateGameState = moveAt x y (stateGameState state)
       }
       where
-        -- moveAt 1 1 [[],[],[]]
+        -- woof, this is clunky
         moveAt movex movey s = 
             flip mapWithIndex s
                 (\statex col -> 
