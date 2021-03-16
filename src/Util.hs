@@ -11,7 +11,7 @@ import RIO
 
 mapWithIndex :: (Int -> a -> b) -> [a] -> [b]
 mapWithIndex f xs = 
-  mapWithIndexRec f 0 xs
+  mapWithIndexRec f 1 xs
   where
     mapWithIndexRec f i [] = []
     mapWithIndexRec f i (x:xs) = 

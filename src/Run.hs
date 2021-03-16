@@ -11,6 +11,7 @@ import qualified RIO.Text as T
 import Data.Aeson as Aeson
 import qualified Network.WebSockets as WS
 
+
 run :: RIO App ()
 run = do
   env <- ask
@@ -32,10 +33,8 @@ application
 application mstate pending = do
 
   conn <- acceptRequest pending
-  -- Add player to state here
   player <- joinPlayer mstate conn
   
-
   withPingThread conn 30 (return ()) 
     $ forever $ do
 
@@ -46,10 +45,10 @@ application mstate pending = do
           Just msg -> updateState mstate conn msg >>= broadcastState
 
           Nothing -> sendTextData conn ("Unknown message" :: Text)
-    -- WS.sendTextData conn (T.append "Testing" msg :: Text)
     -- add a disconnection function in here
     -- that removes the client after
     -- the session has closed
+
 
 updateState 
   :: MVar State -> WS.Connection -> Message -> RIO App State
@@ -72,9 +71,6 @@ joinPlayer mstate conn =
         return 
           ( s { statePlayers = player : statePlayers s }
           , player )
-
-
-
 
 
 broadcastState :: State -> RIO App ()
